@@ -15,6 +15,7 @@ codeLua createFichier(){
 }
 
 void libererFichier(codeLua f){
+    free(f->signature);
     free(f->bytecode);
     free(f);
     f = NULL;
@@ -88,6 +89,7 @@ int main (){
 
     libererChunk(c);
     libererFichier(f);
+    fclose(file);
     return EXIT_SUCCESS;
 }
 

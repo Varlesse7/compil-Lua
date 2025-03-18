@@ -162,6 +162,7 @@ chunk createChunk(){
 }
 
 void libererChunk(chunk c){
+    free(c->name);
     free(c);
     c = NULL;
 }
@@ -217,8 +218,6 @@ void print_constante(constante cons){
     }
 
 }
-
-
 
 chunk decode_chunk (codeLua f){
     char* lua_type_code[35][2] = {{"ABC", "MOVE"}, {"ABx", "LOADK"}, {"ABC", "LOADBOOL"},
@@ -317,7 +316,9 @@ chunk decode_chunk (codeLua f){
 
     num = get_int(f);
     for (int i = 0; i < num; i++) {
-        printf("%s\n",get_string(f, 0));
+        unsigned char* inter = get_string(f, 0);
+        printf("%s\n", inter);
+        free(inter);
         get_int32(f);
         get_int32(f);
     }
@@ -325,7 +326,9 @@ chunk decode_chunk (codeLua f){
     num = get_int(f);
 
     for (int i = 0; i < num; i++) {
-        get_string(f, 0);
+        unsigned char* inter = get_string(f, 0);
+        printf("%s\n", inter);
+        free(inter);
     }
 
     return c;
