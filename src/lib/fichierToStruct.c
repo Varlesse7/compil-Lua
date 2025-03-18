@@ -3,6 +3,20 @@
 //
 #include "fichierToStruct.h"
 
+char* lua_type_code[39][2] = {{"ABC", "MOVE"}, {"ABx", "LOADK"}, {"ABC", "LOADBOOL"},
+                              {"ABC", "LOADNIL"},{"ABC", "GETUPVAL"}, {"ABx", "GETGLOBAL"},
+                              {"ABx", "GETTABLE"},{"ABx", "SETGLOBAL"}, {"ABC", "SETUPVAL"},
+                              {"ABC", "SETTABLE"},{"ABC", "NEWTABLE"}, {"ABC", "SELF"},
+                              {"ABC", "ADD"}, {"ABC", "SUB"}, {"ABC", "MUL"},
+                              {"ABC", "DIV"}, {"ABC", "MOD"}, {"ABC", "POW"},
+                              {"ABC", "UNM"}, {"ABC", "NOT"}, {"ABC", "LEN"},
+                              {"ABC", "CONCAT"}, {"AsBx", "JMP"}, {"ABC", "EQ"},
+                              {"ABC", "LT"}, {"ABC", "LE"}, {"ABC", "TEST"},
+                              {"ABC", "TESTSET"}, {"ABC", "CALL"}, {"ABC", "TAILCALL"},
+                              {"ABC", "RETURN"}, {"AsBx", "FORLOOP"}, {"AsBx", "FORPREP"},
+                              {"ABC", "TFORLOOP"}, {"ABC", "SETLIST"}, {"ABC", "CLOSE"},
+                              {"ABx", "CLOSURE"}, {"ABC", "VARARG"}};
+
 unsigned char get_byte(codeLua f){
     unsigned char b = f->bytecode[f->index];
     f->index = f->index+1;
@@ -161,7 +175,29 @@ chunk createChunk(){
     return (chunk) malloc(sizeof(struct chunk));
 }
 
+void libererListeConstante(listeConstante liste) {
+    while (liste != NULL) {
+        listeConstante temp = liste;
+        liste = liste->suivant;
+        free(temp->cons);
+        free(temp);
+    }
+
+}
+
+void libererListeInstruction(listeInstruction liste) {
+    while (liste != NULL) {
+        listeInstruction temp = liste;
+        liste = liste->suivant;
+        free(temp->inst);
+        free(temp);
+    }
+
+}
+
 void libererChunk(chunk c){
+    libererListeInstruction(c->instruction);
+    libererListeConstante(c->constant);
     free(c->name);
     free(c);
     c = NULL;
@@ -176,10 +212,7 @@ instruction createInstruction(){
     return instr;
 }
 
-void libererInstruction(instruction instr){
-    free(instr);
-    instr = NULL;
-}
+
 
 constante createConstante(){
     return (constante) malloc(sizeof(struct constante));
@@ -219,19 +252,78 @@ void print_constante(constante cons){
 
 }
 
+listeInstruction create_liste_instr(int size){
+    return NULL;
+}
+
+listeConstante create_liste_constante(){
+    return NULL;
+}
+
+listeInstruction insererInstruction(listeInstruction liste, instruction inst, int opcode) {
+    listeInstruction nouveau = (listeInstruction) malloc(sizeof(struct listeInstruction));
+    if (!nouveau) {
+        perror("Allocation échouée");
+        exit(EXIT_FAILURE);
+    }
+
+    nouveau->inst = inst;
+    nouveau->suivant = NULL;
+    nouveau->size = 1;
+
+    if (!liste) {
+        return nouveau;
+    }
+
+    listeInstruction temp = liste;
+    while (temp->suivant) {
+        temp = temp->suivant;
+    }
+    temp->suivant = nouveau;
+    return liste;
+}
+
+listeConstante insererConstant(listeConstante liste, constante cons) {
+    listeConstante nouveau = (listeConstante) malloc(sizeof(struct listeConstante));
+    if (!nouveau) {
+        perror("Allocation échouée");
+        exit(EXIT_FAILURE);
+    }
+
+    nouveau->cons = cons;
+    nouveau->suivant = NULL;
+    nouveau->size = 1;
+
+    if (!liste) {
+        return nouveau;
+    }
+
+    listeConstante temp = liste;
+    while (temp->suivant) {
+        temp = temp->suivant;
+    }
+    temp->suivant = nouveau;
+    return liste;
+}
+
+void print_liste_instruction(listeInstruction li){
+    listeInstruction temp = li;
+    while (temp){
+        print_instruction(lua_type_code[temp->inst->opcode], temp->inst);
+        temp = temp->suivant;
+    }
+}
+
+void print_liste_constante(listeConstante li){
+    listeConstante temp = li;
+    while (temp){
+        print_constante( temp->cons);
+        temp = temp->suivant;
+    }
+}
+
+
 chunk decode_chunk (codeLua f){
-    char* lua_type_code[35][2] = {{"ABC", "MOVE"}, {"ABx", "LOADK"}, {"ABC", "LOADBOOL"},
-                                  {"ABC", "LOADNIL"},{"ABC", "GETUPVAL"}, {"ABx", "GETGLOBAL"},
-                                  {"ABC", "SETTABLE"}, {"ABC", "NEWTABLE"}, {"ABC", "SELF"},
-                                  {"ABC", "ADD"}, {"ABC", "SUB"}, {"ABC", "MUL"},
-                                  {"ABC", "DIV"}, {"ABC", "MOD"}, {"ABC", "POW"},
-                                  {"ABC", "UNM"}, {"ABC", "NOT"}, {"ABC", "LEN"},
-                                  {"ABC", "CONCAT"}, {"AsBx", "JMP"}, {"ABC", "EQ"},
-                                  {"ABC", "LT"}, {"ABC", "LE"}, {"ABC", "TEST"},
-                                  {"ABC", "TESTSET"}, {"ABC", "CALL"}, {"ABC", "TAILCALL"},
-                                  {"ABC", "RETURN"}, {"AsBx", "FORLOOP"}, {"AsBx", "FORREP"},
-                                  {"ABC", "TFORLOOP"}, {"ABC", "SETLIST"}, {"ABC", "CLOSE"},
-                                  {"ABx", "CLOSURE"}, {"ABC", "VARARG"}};
     chunk c;
     c = createChunk();
 
@@ -248,17 +340,20 @@ chunk decode_chunk (codeLua f){
 
     int num = get_int(f);
 
+    c->instruction = create_liste_instr(num);
     for (int i = 0; i < num; i++) {
         instruction instr;
         instr = createInstruction();
         int data = get_int32(f);
 
 
-        unsigned int opcode = get_bits(data, 1, 6);
+        unsigned int opcode = get_bits(data, 0, 6);
+        printf("%d\n", opcode);
         char* tp =lua_type_code[opcode][0];
 
         instr->opcode = opcode;
         instr->type = (unsigned char *) tp;
+        printf("%s\n", instr->type);
         instr->a = get_bits(data, 6, 8);
 
         if (strcmp(tp, "ABC") == 0) {
@@ -269,15 +364,14 @@ chunk decode_chunk (codeLua f){
         } else if (strcmp(tp, "AsBx") == 0) {
             instr->sbx = get_bits(data, 14, 18) - 131071;
         }
-        c->instruction = instr;
-
+        c->instruction = insererInstruction(c->instruction, instr, opcode);
         print_instruction(lua_type_code[opcode], instr);
 
-        libererInstruction(instr);
     }
 
     printf("\n** Decoding Constante\n");
     num = get_int(f);
+    c->constant = create_liste_constante();
 
     for (int i = 0; i < num; i++) {
         constante cons;
@@ -291,12 +385,10 @@ chunk decode_chunk (codeLua f){
             cons->dataS = get_string(f, 0);
         }
 
-        c->constant = cons;
+        c->constant = insererConstant(c->constant, cons);
 
         print_constante(cons);
         printf("\n");
-
-        libererConstante(cons);
     }
 
     printf("\n** Decoding Protos\n");
@@ -311,7 +403,7 @@ chunk decode_chunk (codeLua f){
     printf("\n** Decoding Debug Symbols\n");
     num = get_int(f);
     for (int i = 0; i < num; i++) {
-        get_int32(f);
+         get_int32(f);
     }
 
     num = get_int(f);

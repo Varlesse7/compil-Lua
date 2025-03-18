@@ -40,7 +40,7 @@ typedef struct listeConstante{
     int size;
     struct listeConstante* suivant;
     struct constante* cons;
-}*constanteListe;
+}*listeConstante;
 
 typedef struct constante{
     unsigned char type;
@@ -50,10 +50,9 @@ typedef struct constante{
 
 }*constante;
 
-
 typedef struct chunk{
-    struct instruction* instruction;
-    struct constante* constant;
+    struct listeInstruction* instruction;
+    struct listeConstante* constant;
     struct listeChunk* prototypes;
     unsigned char* name;
     int first_line;

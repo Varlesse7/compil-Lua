@@ -25,7 +25,8 @@ chunk decode_chunk(codeLua f);
 chunk createChunk();
 void libererChunk(chunk c);
 instruction createInstruction();
-void libererInstruction(instruction instr);
+void print_liste_instruction(listeInstruction li);
+void libererListeInstruction(listeInstruction liste);
 constante createConstante();
 void libererConstante(constante cons);
 

@@ -65,6 +65,7 @@ int main (){
     f->l_number_size = get_byte(f);
     f->l_integral_flag = get_byte(f);
 
+    printf("%s\n",f->bytecode);
     printf("%02X\n", f->version);
     printf("%s\n", f->signature);
 
@@ -87,6 +88,8 @@ int main (){
 
     // Nettoyage
 
+    printf("\n");
+    print_liste_instruction(c->instruction);
     libererChunk(c);
     libererFichier(f);
     fclose(file);
