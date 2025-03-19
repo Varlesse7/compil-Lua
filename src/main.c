@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "./lib/fichierToStruct.h"
+#include "./lib/chunk.h"
 
 
 codeLua createFichier(){
@@ -70,21 +70,6 @@ int main (){
     printf("%s\n", f->signature);
 
     chunk c = decode_chunk(f);
-
-    // Affichage du contenu en hexadécimal (exemple)
-    /*for (size_t i = 0; i < bytesRead; i++) {
-        if (i < 4){
-            printf("%02X", buffer[i]);
-            if (i  == 3){
-                printf("\t\t Header signature\n");
-            }
-        }else if (i == 4) {
-            printf("%02X \t\t\t Version Lua %02X\n",buffer[i], buffer[i]);
-        }
-        else printf("%02X ", buffer[i]);
-
-    }
-    printf("\n");*/
 
     // Nettoyage
 

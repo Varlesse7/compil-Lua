@@ -8,7 +8,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -I lib
 
 # Fichiers sources et objets
-SRCS = main.c ./lib/fichierToStruct.c
+SRCS = main.c ./lib/fichierToStruct.c ./lib/constante.c ./lib/instruction.c ./lib/liste.c ./lib/chunk.c
 OBJS = $(SRCS:.c=.o)
 
 # Règle par défaut
