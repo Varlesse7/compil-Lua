@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I ./lib -g
-SRC = main.c ./lib/fichierToStruct.c ./lib/constante.c ./lib/instruction.c ./lib/liste.c ./lib/chunk.c
+SRC = main.c ./lib/fichierToStruct.c ./lib/constante.c ./lib/instruction.c ./lib/liste.c ./lib/chunk.c ./lib/registre.c
 OBJ = $(SRC:.c=.o)
 EXEC = test
 

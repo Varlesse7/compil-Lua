@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "./lib/chunk.h"
+#include "./lib/registre.h"
 
 
 codeLua createFichier(){
@@ -71,10 +72,13 @@ int main (){
 
     chunk c = decode_chunk(f);
 
-    // Nettoyage
-
     printf("\n");
     print_liste_instruction(c->instruction);
+
+    printf("\n=== Exécution du chunk ===\n");
+    execute_chunk(c);
+
+     // Nettoyage
     libererChunk(c);
     libererFichier(f);
     fclose(file);
