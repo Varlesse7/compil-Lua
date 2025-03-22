@@ -39,12 +39,10 @@ chunk decode_chunk (codeLua f){
 
 
         unsigned int opcode = get_bits(data, 0, 6);
-        printf("%d\n", opcode);
         char* tp =lua_type_code[opcode][0];
 
         instr->opcode = opcode;
         instr->type = (unsigned char *) tp;
-        printf("%s\n", instr->type);
         instr->a = get_bits(data, 6, 8);
 
         if (strcmp(tp, "ABC") == 0) {
@@ -100,7 +98,6 @@ chunk decode_chunk (codeLua f){
     num = get_int(f);
     for (int i = 0; i < num; i++) {
         unsigned char* inter = get_string(f, 0);
-        printf("%s\n", inter);
         free(inter);
         get_int32(f);
         get_int32(f);
@@ -110,7 +107,6 @@ chunk decode_chunk (codeLua f){
 
     for (int i = 0; i < num; i++) {
         unsigned char* inter = get_string(f, 0);
-        printf("%s\n", inter);
         free(inter);
     }
 

@@ -66,9 +66,8 @@ int main (){
     f->l_number_size = get_byte(f);
     f->l_integral_flag = get_byte(f);
 
-    printf("%s\n",f->bytecode);
-    printf("%02X\n", f->version);
-    printf("%s\n", f->signature);
+    printf("Version : %02X\n", f->version);
+    printf("Prog : %s\n", f->signature);
 
     chunk c = decode_chunk(f);
 

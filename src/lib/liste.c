@@ -12,6 +12,8 @@ listeConstante create_liste_constante(){
 
 listeInstruction insererInstruction(listeInstruction liste, instruction inst, int opcode) {
     listeInstruction nouveau = (listeInstruction) malloc(sizeof(struct listeInstruction));
+
+
     if (!nouveau) {
         perror("Allocation échouée");
         exit(EXIT_FAILURE);
@@ -20,6 +22,7 @@ listeInstruction insererInstruction(listeInstruction liste, instruction inst, in
     nouveau->inst = inst;
     nouveau->suivant = NULL;
     nouveau->size = 1;
+
 
     if (!liste) {
         return nouveau;
