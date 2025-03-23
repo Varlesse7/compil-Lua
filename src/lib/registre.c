@@ -13,17 +13,12 @@ constante chercherConstante(listeConstante l, int num){
     return l->cons;
 }
 
-listeInstruction temp = NULL;
 
 void execute_liste_instructions(listeInstruction instr_list, listeConstante l, double* registre){
-    listeInstruction instr_boucle;
-    print_liste_instruction(instr_list);
-
+    listeInstruction instr_boucle = instr_list;
 
     while (instr_list) {
         instruction instr = instr_list->inst;
-        printf("Test\n");
-        print_instruction(lua_type_code[instr->opcode], instr);
 
         switch (instr->opcode) {
             case 0: //MOVE
@@ -98,18 +93,55 @@ void execute_liste_instructions(listeInstruction instr_list, listeConstante l, d
                     else
                         fprintf(stderr, "Erreur: Division par zéro\n");
                 } else if(instr->b < 256 && instr->c > 256){
-                    int d = chercherConstante(l,instr->c)->dataD;
+                    double d = chercherConstante(l,instr->c)->dataD;
                     if (d != 0)
                         registre[instr->a] = registre[instr->b] / d;
                     else
                         fprintf(stderr, "Erreur: Division par zéro\n");
                 }else {
-                    int d = chercherConstante(l,instr->c)->dataD;
+                    double d = chercherConstante(l,instr->c)->dataD;
                     if (d != 0)
                         registre[instr->a] = chercherConstante(l,instr->b)->dataD / d;
                     else
                         fprintf(stderr, "Erreur: Division par zéro\n");
                 }
+                break;
+
+            case 21: //CONCAT
+                registre[instr->a] = (uintptr_t) concatener_registres(registre, instr->b, instr->c);
+
+                break;
+
+            case 22: //JMP
+                int sautjmp = instr->sbx;
+                for(int i =0; i<sautjmp; i++){
+                    instr_list = instr_list->suivant;
+                }
+                break;
+
+            case 23: //EQ
+                double b,c;
+                if(instr->b > 256) b = chercherConstante(l,instr->b)->dataD;
+                else b = registre[instr->b];
+                if(instr->c > 256) c = chercherConstante(l,instr->c)->dataD;
+                else c = registre[instr->c];
+                if((b == c)!=instr->a) instr_list = instr_list->suivant;
+                break;
+
+            case 24: //LT
+                if(instr->b > 256) b = chercherConstante(l,instr->b)->dataD;
+                else b = registre[instr->b];
+                if(instr->c > 256) c = chercherConstante(l,instr->c)->dataD;
+                else c = registre[instr->c];
+                if((b < c)!=instr->a) instr_list = instr_list->suivant;
+                break;
+
+            case 25: //LE
+                if(instr->b > 256) b = chercherConstante(l,instr->b)->dataD;
+                else b = registre[instr->b];
+                if(instr->c > 256) b = chercherConstante(l,instr->c)->dataD;
+                else c = registre[instr->c];
+                if((b <= c)!=instr->a) instr_list = instr_list->suivant;
                 break;
 
             case 28: // CALL 
@@ -140,18 +172,23 @@ void execute_liste_instructions(listeInstruction instr_list, listeConstante l, d
                 printf("\n=== Retour final ===\n");
                 return;
 
-            case 31: //FORLOOP
+            case 31: //FORLOOP 
                 registre[instr->a] += registre[instr->a + 2];
                 if(registre[instr->a] <= registre[instr->a + 1]){
                     int saut = instr->sbx;
                     registre[instr->a + 3] = registre[instr->a];
-                    printf("\n\ndébut loop\n");
-                    execute_liste_instructions(instr_boucle, l, registre);    
+                    //printf("\n\ndébut loop\n");
+                    if (instr_boucle == NULL) {
+                        printf("Boucle vide\n");
+                    } else {
+                        listeInstruction temp = instr_boucle;
+                        execute_liste_instructions(temp, l, registre);
+                    }  
                 }
                 break;
 
             case 32: //FORPREP
-                registre[instr->a] += registre[instr->a + 2];
+                registre[instr->a] -= registre[instr->a + 2];
                 int saut = instr->sbx;
                 instr_boucle = create_liste_instr(saut);
                 for(int i = 0; i< saut; i++){
@@ -167,10 +204,9 @@ void execute_liste_instructions(listeInstruction instr_list, listeConstante l, d
                 break;
         }
 
-        afficher_registres(registre, 256);
-
         instr_list = instr_list->suivant;
     }
+
 }
 
 void execute_chunk(chunk c) {
@@ -181,6 +217,8 @@ void execute_chunk(chunk c) {
     listeConstante l = c->constant;
 
     execute_liste_instructions(instr_list,l,registre);
+    afficher_registres(registre, 256);
+
 }
 
 void afficher_registres(double* registre, int taille) {
@@ -197,4 +235,45 @@ void afficher_registres(double* registre, int taille) {
         }
     }
     printf("\n");
+}
+
+char* concatener_registres(double* registre, int b, int c) {
+    size_t buffer_size = 256;
+    char *res = (char *)malloc(buffer_size); 
+    if (!res) {
+        printf("Erreur d'allocation mémoire\n");
+        return NULL;
+    }  
+    res[0] = '\0'; 
+    for (int i = b; i <= c; i++) {
+        uintptr_t val = (uintptr_t)registre[i];
+
+        if (val > 256) {
+            char *str_val = (char *)val;
+            if (strlen(res) + strlen(str_val) + 1 > buffer_size) {
+                buffer_size *= 2;
+                res = (char *)realloc(res, buffer_size);
+                if (!res) {
+                    printf("Erreur de réallocation mémoire\n");
+                    return NULL;
+                }
+            }
+            strcat(res, str_val);
+        } else { 
+            char temp[32];
+            snprintf(temp, sizeof(temp), "%.2f", registre[i]);
+            if (strlen(res) + strlen(temp) + 1 > buffer_size) {
+                buffer_size *= 2;
+                res = (char *)realloc(res, buffer_size);
+                if (!res) {
+                    printf("Erreur de réallocation mémoire\n");
+                    return NULL;
+                }
+            }
+
+            strcat(res, temp);
+        }
+    }
+
+    return res;
 }
