@@ -33,7 +33,6 @@ typedef struct instruction{
     unsigned int c;
     unsigned int bx;
     unsigned int sbx;
-
 }*instruction;
 
 typedef struct listeConstante{

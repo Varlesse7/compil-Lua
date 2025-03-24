@@ -22,10 +22,16 @@ void libererFichier(codeLua f){
     f = NULL;
 }
 
-int main (){
+int main (int argc, char* argv[]){
+    if (argc != 2){
+        printf("Voici la commande a taper :\n\t./prog <nom du fichier avec .out>\n\n");
+        return EXIT_FAILURE;
+    }
+    printf("fichier que vous avez rentrez %s\n", argv[1]);
+
     codeLua f;
     f = createFichier();
-    FILE* file = fopen("luac.out", "rb"); // Ouvrir en mode lecture binaire
+    FILE* file = fopen(argv[1], "rb"); // Ouvrir en mode lecture binaire
     if (!file) {
         perror("Erreur lors de l'ouverture du fichier");
         return EXIT_FAILURE;
