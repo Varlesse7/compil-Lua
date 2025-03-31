@@ -1,0 +1,7 @@
+# dune init project cpa
+# OCAMLPARAM: unset
+# Shared cache: disabled
+# Shared cache location:
+# C:\Users\Pierre\AppData\Local\Microsoft\Windows\INetCache\dune\db
+# Workspace root: "D:\\varlesse\\Documents\\GitHub\\try\\Projet2CPA\\cpa"
+# Auto-detected concurrency: 12

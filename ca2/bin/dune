@@ -1,0 +1,4 @@
+(executable
+ (public_name cpa)
+ (name main)
+ (libraries cpa))
