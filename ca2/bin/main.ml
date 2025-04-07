@@ -19,7 +19,6 @@ type expr =
 | Let of pat * expr * expr
 | LetRec of pat * expr * expr
 | If of expr * expr * expr
-
 type program = coms
 and coms = com list
 and com =
@@ -36,7 +35,7 @@ and com =
 | Branch of coms * coms
 and value =
 | Int of int
-| Env of envMap
+| Env of envM ap
 | Bool of bool
 | NullValue
 and operator = Add | Sub | Mult
@@ -57,7 +56,7 @@ let compile (env: Map.Make String) (e:expr) : coms =
   | Lambda p e -> Cur (compile env e)
   | Apply (Ident "fst") e2 -> compiler(env e2) @ Car
   | Apply (Ident "snd") e2 -> compiler(env e2) @ Cdr
-  | Apply (Ident x) e2 -> compiler(env e2) @ (Op (x)²) 
+  | Apply (Ident x) e2 -> compiler(env e2) @ (Op (x)) 
   | Apply e1 e2 -> Push@(compile env e1) @ Swap @ (compile env e2) @ Cons@ App
 
 

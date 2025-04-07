@@ -43,7 +43,7 @@ expression :
 | LET REC pat EQ expression IN expression { Let($3,$5,$7) }
 | IF expression THEN expression ELSE expression  { If($2,$4,$6) }
 | expression expression                   { Apply($1,$2) }
-| LPAREN pat COMMA pat RPAREN             { Mlpair($2,$4) }
+| LPAREN expression COMMA expression RPAREN             { Mlpair($2,$4) }
 ;
 
 pat:
