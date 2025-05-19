@@ -1,62 +1,116 @@
-module StringMap = Map.Make(String);;
+module StringMap = Map.Make(String)
+type envMap = int StringMap.t  (* ident -> position *)
 
 type ident = string
-type envMap = (StringMap.t) 
 
 type pat =
-| Pairpat of pat * pat
-| IdentPat of ident
-| NullPat
+  | Pairpat of pat * pat
+  | IdentPat of ident
+  | NullPat
 
 type expr =
-| Ident of ident
-| Number of int
-| False
-| True
-| Apply of expr * expr
-| Mlpair of expr * expr
-| Lambda of pat * expr
-| Let of pat * expr * expr
-| LetRec of pat * expr * expr
-| If of expr * expr * expr
+  | Ident of ident
+  | Number of int
+  | False
+  | True
+  | Apply of expr * expr
+  | Mlpair of expr * expr
+  | Lambda of pat * expr
+  | Let of pat * expr * expr
+  | LetRec of pat * expr * expr
+  | If of expr * expr * expr
+
 type program = coms
 and coms = com list
 and com =
-| Quote of value
-| Op of operator
-| Car
-| Cdr
-| Cons
-| Push
-| Swap
-| App
-| Rplac
-| Cur of coms
-| Branch of coms * coms
+  | Quote of value
+  | Op of operator
+  | Car
+  | Cdr
+  | Cons
+  | Push
+  | Swap
+  | App
+  | Rplac
+  | Cur of coms
+  | Branch of coms * coms
+
 and value =
-| Int of int
-| Env of envM ap
-| Bool of bool
-| NullValue
+  | Int of int
+  | Bool of bool
+  | Quote of envMap 
+  | Pair of value * value
+  | Closure of coms * (value list) 
+  | NullValue
+
 and operator = Add | Sub | Mult
 
-let compile (env: Map.Make String) (e:expr) : coms =
+(* Fonction de parsing des opérateurs binaires *)
+let operation (x : string) : operator =
+  match x with
+  | "+" -> Add
+  | "-" -> Sub
+  | "*" -> Mult
+  | _ -> failwith "Opérateur non supporté"
+
+(* Fonction pour extraire tous les identifiants d’un pattern *)
+let rec pat_idents p =
+  match p with
+  | IdentPat id -> [id]
+  | Pairpat (p1, p2) -> pat_idents p1 @ pat_idents p2
+  | NullPat -> []
+
+(* Associe à chaque identifiant une position dans l’environnement *)
+let assign_positions ids base =
+  List.mapi (fun i id -> (id, i + base)) ids
+
+(* Ajoute tous les identifiants d’un pattern à l’environnement *)
+let extend_env (env : envMap) (p : pat) : envMap =
+  let ids = pat_idents p in
+  let new_bindings = assign_positions ids 0 in
+  let shifted_env = StringMap.map (fun pos -> pos + List.length ids) env in
+  List.fold_left (fun acc (id, pos) -> StringMap.add id pos acc) shifted_env new_bindings
+
+
+(* Code CAM pour accéder à la variable à la position donnée *)
+let rec access_code (n : int) : coms =
+  if n = 0 then [Car]
+  else Cdr :: access_code (n - 1)
+
+(* Compilation d'une expression vers des instructions CAM *)
+let rec compile (env : envMap) (e : expr) : coms =
   match e with
   | Number n -> [Quote (Int n)]
-  | True -> [Quote (Bool true)] 
-  | False -> [Quote (Bool false)] 
-  | Ident i -> 
-    match env.find_opt i env with 
-      Some n -> compile env n 
-    | Nothing -> assert false
-  | If e1 e2 e3 -> Push@(compile env e1)@Branch (compile env e2) (compile env e3) 
-  | Mlpair e1 e2 -> Push@(compile env e1)@ Swap@(compile env e2)@Cons
-  | Let p e1 e2 -> Push@(compile env e1)@Cons@(compile (p::env) e2)
-  | LetRec p e1 e2 -> Push@Quote(env)@Cons@Push@(compile env e1)@Swap@Rplac@(compile (p::env) e2)
-  | Lambda p e -> Cur (compile env e)
-  | Apply (Ident "fst") e2 -> compiler(env e2) @ Car
-  | Apply (Ident "snd") e2 -> compiler(env e2) @ Cdr
-  | Apply (Ident x) e2 -> compiler(env e2) @ (Op (x)) 
-  | Apply e1 e2 -> Push@(compile env e1) @ Swap @ (compile env e2) @ Cons@ App
+  | True -> [Quote (Bool true)]
+  | False -> [Quote (Bool false)]
+  | Ident i ->
+      begin match StringMap.find_opt i env with
+      | Some pos -> access_code pos
+      | None -> failwith ("Variable libre ou non liée : " ^ i)
+      end
+  | If (e1, e2, e3) ->
+      [Push] @ (compile env e1) @ [Branch (compile env e2, compile env e3)]
+  | Mlpair (e1, e2) ->
+      [Push] @ (compile env e1) @ [Swap] @ compile env e2 @ [Cons]
+  | Let (p, e1, e2) ->
+      let code_e1 = compile env e1 in
+      let new_env = extend_env env p in
+      [Push] @ code_e1 @ [Cons] @ compile new_env e2
+  | LetRec (p, e1, e2) ->
+      let new_env = extend_env env p in
+      let code_e1 = compile new_env e1 in
+      let code_e2 = compile new_env e2 in
+      [Push; Quote env; Cons; Push] @ code_e1 @ [Swap; Rplac] @ code_e2
+  | Lambda (p, body) ->
+      let new_env = extend_env env p in
+      [Cur (compile new_env body)]
+  | Apply (Ident "fst", e2) -> compile env e2 @ [Car]
+  | Apply (Ident "snd", e2) -> compile env e2 @ [Cdr]
+  | Apply (Ident x, e2) when List.mem x ["+"; "-"; "*"] ->
+      compile env e2 @ [Op (operation x)]
+  | Apply (e1, e2) ->
+      [Push] @ compile env e1 @ [Swap] @ compile env e2 @ [Cons; App]
 
 
+let compile_program (e : expr) : coms =
+  compile StringMap.empty e
