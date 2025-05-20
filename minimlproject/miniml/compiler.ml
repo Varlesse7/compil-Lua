@@ -1,49 +1,6 @@
+open Ast
+
 module StringMap = Map.Make(String)
-
-type ident = string
-
-type pat =
-  | Pairpat of pat * pat
-  | IdentPat of ident
-  | NullPat
-
-type expr =
-  | Ident of ident
-  | Number of int
-  | False
-  | True
-  | Apply of expr * expr
-  | Mlpair of expr * expr
-  | Lambda of pat * expr
-  | Let of pat * expr * expr
-  | LetRec of pat * expr * expr
-  | If of expr * expr * expr
-
-
-type program = coms
-and coms = com list
-and com =
-  | Quote of value
-  | Op of operator
-  | Car
-  | Cdr
-  | Cons
-  | Push
-  | Swap
-  | App
-  | Rplac
-  | Cur of coms
-  | Branch of coms * coms
-
-and value =
-  | Int of int
-  | Bool of bool
-  | Quote of pat 
-  | Pair of value * value
-  | Closure of coms * value 
-  | NullValue
-
-and operator = Add | Sub | Mult | Eq
 
 
 (* Fonction de parsing des opérateurs binaires *)
@@ -104,6 +61,55 @@ let rec compile (env : pat) (e : expr) : coms =
 let compile_program (e : expr) : coms =
   compile (IdentPat "null") e
 
+let rec print_pat p =
+  match p with
+  | NullPat -> "NullPat"
+  | IdentPat id -> Printf.sprintf "IdentPat(%s)" id
+  | Pairpat (p1, p2) ->
+      Printf.sprintf "Pairpat(%s, %s)" (print_pat p1) (print_pat p2)
+
+let rec print_expr ?(indent=0) e =
+  let indent_str = String.make indent ' ' in
+  match e with
+  | Ident id ->
+      Printf.printf "%sIdent(%s)\n" indent_str id
+  | Number n ->
+      Printf.printf "%sNumber(%d)\n" indent_str n
+  | False ->
+      Printf.printf "%sFalse\n" indent_str
+  | True ->
+      Printf.printf "%sTrue\n" indent_str
+  | Apply (e1, e2) ->
+      Printf.printf "%sApply(\n" indent_str;
+      print_expr ~indent:(indent + 2) e1;
+      print_expr ~indent:(indent + 2) e2;
+      Printf.printf "%s)\n" indent_str
+  | Mlpair (e1, e2) ->
+      Printf.printf "%sMlpair(\n" indent_str;
+      print_expr ~indent:(indent + 2) e1;
+      print_expr ~indent:(indent + 2) e2;
+      Printf.printf "%s)\n" indent_str
+  | Lambda (p, e) ->
+      Printf.printf "%sLambda(%s,\n" indent_str (print_pat p);
+      print_expr ~indent:(indent + 2) e;
+      Printf.printf "%s)\n" indent_str
+  | Let (p, e1, e2) ->
+      Printf.printf "%sLet(%s,\n" indent_str (print_pat p);
+      print_expr ~indent:(indent + 2) e1;
+      print_expr ~indent:(indent + 2) e2;
+      Printf.printf "%s)\n" indent_str
+  | LetRec (p, e1, e2) ->
+      Printf.printf "%sLetRec(%s,\n" indent_str (print_pat p);
+      print_expr ~indent:(indent + 2) e1;
+      print_expr ~indent:(indent + 2) e2;
+      Printf.printf "%s)\n" indent_str
+  | If (e1, e2, e3) ->
+      Printf.printf "%sIf(\n" indent_str;
+      print_expr ~indent:(indent + 2) e1;
+      print_expr ~indent:(indent + 2) e2;
+      print_expr ~indent:(indent + 2) e3;
+      Printf.printf "%s)\n" indent_str
+
 
 let string_of_operator = function
   | Add -> "Add"
@@ -114,7 +120,6 @@ let string_of_operator = function
 let rec string_of_value = function
   | Int n -> Printf.sprintf "Int(%d)" n
   | Bool b -> Printf.sprintf "Bool(%b)" b
-  | Quote _ -> "Quote(envMap)"  (* simplifié, à adapter si tu veux plus de détails *)
   | Pair (v1, v2) ->
       Printf.sprintf "Pair(%s, %s)" (string_of_value v1) (string_of_value v2)
   | Closure (_, _) -> "Closure(<code>, <env>)"
@@ -140,3 +145,6 @@ let rec string_of_com = function
 
 let print_code_cam (prog : com list) =
   List.iter (fun c -> print_endline (string_of_com c)) prog
+
+
+

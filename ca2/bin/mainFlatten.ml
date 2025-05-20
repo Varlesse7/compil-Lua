@@ -14,4 +14,4 @@ let () =
     Printf.printf "%2d: %s\n" i (string_of_flat instr)
   ) flat;
   Printf.printf "\nCode Éclat généré :\n";
-  generate_eclat flat
+  generate_eclat_to_file "code.ecl" flat_code

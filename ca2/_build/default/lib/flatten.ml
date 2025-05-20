@@ -61,6 +61,7 @@ let string_of_flat = function
   | FOp Add -> "Op(Add)"
   | FOp Sub -> "Op(Sub)"
   | FOp Mult -> "Op(Mult)"
+  | FOp Eq -> "Op(Eq)"
   | FCar -> "Car"
   | FCdr -> "Cdr"
   | FCons -> "Cons"
@@ -72,9 +73,15 @@ let string_of_flat = function
   | FCur i -> Printf.sprintf "Cur(%d)" i
 
 
-let generate_eclat code =
-  Printf.printf "let code = create<1024>();;\n\n";
-  Printf.printf "let load_code() =\n";
+let generate_eclat_to_file (filename : string) (code : flat_com array) =
+  let oc = open_out filename in
+  let write_line s = output_string oc (s ^ "\n") in
+
+  write_line "let code = create<1024>();;\n";
+  write_line "let load_code() =";
   Array.iteri (fun i instr ->
-    Printf.printf "  set(code, %d, %s);;\n" i (string_of_flat instr)
-  ) code
+    let line = Printf.sprintf "  set(code, %d, %s);;" i (string_of_flat instr) in
+    write_line line
+  ) code;
+
+  close_out oc
