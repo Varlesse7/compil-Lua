@@ -1,8 +1,4 @@
-open Mltocam
 
-let tl = function
-  | _ :: t -> t
-  | [] -> failwith "tl: empty list"
 
 let code = create<1024>();;
 let stack = create<256>();;

@@ -22,7 +22,7 @@ let rec access_code (i:ident) (env : pat) : coms option =
                         | None -> (match access_code i p2 with
                                   | Some c -> Some (Cdr :: c)
                                   | None -> None))
-  | IdentPat x -> if x == i then Some [] else None
+  | IdentPat x -> if x = i then Some [] else None
   | NullPat -> None
 
 (* Compilation d'une expression vers des instructions CAM *)
@@ -59,7 +59,7 @@ let rec compile (env : pat) (e : expr) : coms =
 
 
 let compile_program (e : expr) : coms =
-  compile (IdentPat "null") e
+  compile NullPat e
 
 let rec print_pat p =
   match p with

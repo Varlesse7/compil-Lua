@@ -1,4 +1,5 @@
-open Mltocam
+open Ast
+open Compiler
 
 let tl = function
   | _ :: t -> t
@@ -127,8 +128,6 @@ and rplac_subst dummy replacement = function
     Pair (rplac_subst dummy replacement v1, rplac_subst dummy replacement v2)
   | Closure (c, env) -> 
     Closure (c, rplac_subst dummy replacement env)
-  | Quote _ -> 
-    NullValue
   
 
 and eval_coms (coms : coms) (stack : value list) : value list =

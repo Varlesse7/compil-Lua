@@ -1,0 +1,2 @@
+let p = (3, 4) in
+add(fst(p), snd(p))

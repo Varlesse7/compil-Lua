@@ -1,0 +1,2 @@
+let f = fun x -> add(x, 1) in
+f(41)

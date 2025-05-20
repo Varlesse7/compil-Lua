@@ -1,0 +1,20 @@
+let p = (10, 32) in
+
+let a = fst(p) in
+let b = snd(p) in
+
+let increment = fun x -> add(x, 1) in
+let a1 = increment(a) in
+
+let double = fun x -> mult(x, 2) in
+let doubledb = double(b) in
+
+let addpair = fun pair -> add(fst(pair), snd(pair)) in
+let sum = addpair(p) in
+
+let test = if eq(a, 10) then 100 else 200 in
+
+let f = fun x -> add(mult(x, 2), 1) in
+let result = f(5) in
+
+add(add(a1, doubledb), add(sum, add(test, result)))

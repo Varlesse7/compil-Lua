@@ -1,4 +1,4 @@
-open Mltocam
+open Ast
 
 (* Type plat *)
 type flat_com =
