@@ -38,7 +38,7 @@ expression :
 | INT                                     { Number($1) }
 | FALSE                                   { False }
 | TRUE                                    { True }
-| FUN pat RIGHT_ARROW expression          { Fun($2,$4) }
+| FUN pat RIGHT_ARROW expression          { Lambda($2,$4) }
 | LET pat EQ expression IN expression     { Let($2,$4,$6) }
 | LET REC pat EQ expression IN expression { Let($3,$5,$7) }
 | IF expression THEN expression ELSE expression  { If($2,$4,$6) }

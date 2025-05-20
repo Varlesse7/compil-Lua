@@ -1,4 +1,5 @@
 (executable
- (public_name cpa)
+ (public_name CA)
  (name main)
- (libraries cpa))
+ (flags (:standard -w -32-34-37))
+ (libraries ca))

@@ -1,23 +1,27 @@
-open cpa
+open Mltocam
 
-module StringMap = Map.Make(String);;
-module List;;
+let tl = function
+  | _ :: t -> t
+  | [] -> failwith "tl: empty list"
 
-let eval_com (com : com) (s : value list) : (value list) =
+
+let rec eval_com (com : com) (s : value list) : (value list) =
   match com with
-      Quote (Int x) -> [x]@(tl s)
-    | Quote (Bool x) -> [x]@(tl s)
     | Quote (x) -> [x]@(tl s)
     
     | Car -> (
         match s with
-        | Pair (v1, _) :: tail -> v1 :: tail
+        | Pair (v1, v2) :: tail -> (Printf.printf "1ere = %s\n" (string_of_value v1); 
+        Printf.printf "2eme = %s\n" (string_of_value v2);
+        v1 :: tail)
         | _ -> failwith "Car applied to non-pair"
       )
 
     | Cdr -> (
         match s with
-        | Pair (_, v2) :: tail -> v2 :: tail
+        | Pair (v1, v2) :: tail -> Printf.printf "1ere = %s\n" (string_of_value v1); 
+        Printf.printf "2eme = %s\n" (string_of_value v2);
+        v2 :: tail
         | _ -> failwith "Cdr applied to non-pair"
       )
 
@@ -40,8 +44,8 @@ let eval_com (com : com) (s : value list) : (value list) =
       )
 
     | Op op -> (
-        match stack with
-        | v2 :: v1 :: rest -> (
+        match s with
+        | Pair (v1, v2) :: rest -> (
             match op with
             | Add -> (match v1, v2 with
                 | Int x, Int y -> Int (x + y) :: rest
@@ -64,15 +68,18 @@ let eval_com (com : com) (s : value list) : (value list) =
       | _ -> failwith "Branch nécessite un booléen au sommet de la pile"
     )
 
-    | Cur c -> 
-        Closure (c, s) :: s
+    | Cur c -> (match s with
+        | [] -> failwith "Pas d'arguments"
+        | x::xs -> Closure (c, x) :: xs)
     
     | App -> (
-      match stack with
-      | v :: Closure (code_body, env) :: tail -> 
+      match s with
+      | Pair (Closure (code_body, env), v) :: tail -> 
           (* On exécute le code du closure avec l’environnement étendu par la valeur v *)
-          let new_stack = v :: env in
-          let res_stack = eval code_body new_stack in
+          Printf.printf "v = %s\n" (string_of_value v);
+          let new_stack = Pair(NullValue, v) :: [env] in
+          let res_stack = eval_coms code_body new_stack in
+          
           (* Après exécution, on remplace le closure et son argument par le résultat au sommet *)
           (match res_stack with
             | res :: _ -> res :: tail
@@ -82,7 +89,7 @@ let eval_com (com : com) (s : value list) : (value list) =
 
     
     | Rplac -> (
-        match stack with
+        match s with
         | v' :: Pair (v, _) :: tail ->
             Pair (v, v') :: tail
         | _ -> failwith "Rplac requires a value and a pair"
@@ -95,3 +102,7 @@ and eval_coms (coms : coms) (stack : value list) : value list =
   | c :: cs -> 
       let stack' = eval_com c stack in
       eval_coms cs stack'
+
+
+
+

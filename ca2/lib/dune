@@ -1,2 +1,4 @@
 (library
- (name cpa))
+ (name ca)
+ (modules ca mltocam flatten)
+ (wrapped false))
