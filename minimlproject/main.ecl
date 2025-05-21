@@ -39,22 +39,22 @@ let rec run_interp_at(ip : int) =
 
   | Car ->
       (match get(stack, !sp - 1) with
-       | Pair(a, _) ->
-           set(stack, !sp - 1, a);
-           run_interp_at(ip + 1)
+       | Pair(i, _) ->
+           let a = get(stack, i) in 
+            set(stack, !sp - 1, a);
+            run_interp_at(ip + 1)
        | _ -> failwith "Expected pair for Car")
 
   | Cdr ->
       (match get(stack, !sp - 1) with
-       | Pair(_, b) ->
-           set(stack, !sp - 1, b);
-           run_interp_at(ip + 1)
+       | Pair(_, i) ->
+          let b = get(stack, i) in 
+            set(stack, !sp - 1, b);
+            run_interp_at(ip + 1)
        | _ -> failwith "Expected pair for Cdr")
 
   | Cons ->
-      let v1 = get(stack, !sp - 2) in
-      let v2 = get(stack, !sp - 1) in
-      set(stack, !sp - 2, Pair(v1, v2));
+      set(stack, !sp - 2, Pair((!sp - 2), (!sp - 1)));
       sp := !sp - 1;
       run_interp_at(ip + 1)
 
@@ -93,13 +93,13 @@ let rec run_interp_at(ip : int) =
       if b then run_interp_at(i1) else run_interp_at(i2)
 
   | Cur i ->
-      set(stack, !sp, Closure(i, !ep));
-      sp := !sp + 1;
+      set(stack, !sp, Closure(i, !sp - 1));
       run_interp_at(ip + 1)
 
   | App ->
-      let Closure(ip', env') = get(stack, !sp - 2) in
+      let Closure(ip', i) = get(stack, !sp - 2) in
       let arg = get(stack, !sp - 1) in
+      let env' = get(stack, i) in 
       set(env, env', arg);
       sp := !sp - 2;
       run_interp_at(ip')
