@@ -8,14 +8,14 @@ let () =
   try
     let lexbuf = Lexing.from_channel ic in
     let p = Parser.prog Lexer.token lexbuf in
-    print_expr p;
     let code_cam = compile_program p in
-    let resultat = eval_coms code_cam [NullValue] in
-    let flat_code = flatten code_cam in
-
     print_string "\nCode CAM généré \n";
     print_code_cam code_cam;
     print_string ".\n";
+
+    let resultat = eval_coms code_cam [ Pair(NullValue, Closure([Cdr;Op Add], NullValue)); Closure([Cdr;Op Sub], NullValue) ] in
+
+    let flat_code = flatten code_cam in
 
     ( match resultat with
       | Int n :: _ -> Printf.printf "Résultat : %d\n" n
@@ -23,11 +23,8 @@ let () =
       | NullValue :: _ -> Printf.printf "Null\n"
       | _ -> Printf.printf "Résultat inattendu\n");
 
-    Printf.printf "Code CAM plat :\n";
-    Array.iteri (fun i instr ->
-      Printf.printf "%2d: %s\n" i (string_of_flat instr)
-    ) flat_code;
-    Printf.printf "\nCode Éclat généré :\n";
+    Printf.printf "\nCode CAM plat écrit\n";
+    Printf.printf "\nCode Éclat généré dans le fichier code.ecl\n";
     generate_eclat_to_file "code.ecl" flat_code
 
 

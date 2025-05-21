@@ -1,4 +1,5 @@
-
+include "code.ecl";; (* Inclusion du fichier généré *)
+use "types.ecl";;
 
 let code = create<1024>();;
 let stack = create<256>();;
@@ -8,20 +9,6 @@ let ep = ref 0;;
 
 let counter() =
   reg (fun c -> c + 1) init 0 ;;
-
-let load_code() =
-  set(code, 0, Quote(Int(1)));
-  set(code, 1, Quote(Int(2)));
-  set(code, 2, Push);
-  set(code, 3, Quote(Bool(true)));
-  set(code, 4, Branch(0, 1));;
-
-let rec rplac_subst dummy replacement = function
-  | NullValue -> if dummy = NullValue then replacement else NullValue
-  | Int _ | Bool _ as v -> v
-  | Pair (v1, v2) -> Pair (rplac_subst dummy replacement v1, rplac_subst dummy replacement v2)
-  | Closure (c, env) -> Closure (c, rplac_subst dummy replacement env)
-  | Quote _ -> NullValue
 
 let rec run_interp_at(ip : int) =
   let instr = get(code, ip) in

@@ -14,21 +14,15 @@ let rec eval_com (com : com) (s : value list) : (value list) =
     
     | Car -> (
         match s with
-        | Pair (v1, v2) :: tail -> 
-            Printf.printf "1ere = %s\n" (string_of_value v1); 
-            Printf.printf "2eme = %s\n" (string_of_value v2);
-            v1 :: tail
+        | Pair (v1, v2) :: tail -> v1 :: tail
         | _ -> failwith "Car applied to non-pair"
       )
 
     | Cdr -> (
         match s with
-        | Pair (v1, v2) :: tail -> Printf.printf "1ere = %s\n" (string_of_value v1); 
-        Printf.printf "2eme = %s\n" (string_of_value v2);
-        v2 :: tail
-        | Closure (_, v) :: tail -> Printf.printf "2eme = %s\n" (string_of_value v);
-        v :: tail
-        | _ -> failwith ""
+        | Pair (v1, v2) :: tail -> v2 :: tail
+        | Closure (_, v) :: tail -> v :: tail
+        | _ -> failwith "Cdr applied to non-pair"
       )
 
     | Cons -> (
@@ -64,7 +58,6 @@ let rec eval_com (com : com) (s : value list) : (value list) =
                 | _ -> failwith "Op Mult sur types invalides")
             | Eq -> (match v1, v2 with
                 | Int x, Int y ->
-                  Printf.printf "\n%s\n" (string_of_value v2) ;
                   if x == y then (Bool true) :: rest else (Bool false) :: rest
                 | _ -> failwith "Op Add sur types invalides")
           )
@@ -86,48 +79,49 @@ let rec eval_com (com : com) (s : value list) : (value list) =
     | App -> (
         match s with
         | Pair (Closure (code_body, env), v) :: tail -> 
-            (* Affiche la valeur passée en argument *)
-            Printf.printf "v = %s\n" (string_of_value v);
+            (* Affiche la valeur passée en argument
+            Printf.printf "v = %s\n" (string_of_value v); *)
 
             (* Étend l’environnement en construisant une paire : (env, v) *)
             let extended_env = Pair (env, v) in
 
             (* Exécute le code du closure avec la pile initialisée à [extended_env] *)
-            let res_stack = eval_coms code_body [extended_env] in
+            let res_stack = eval_coms code_body (extended_env :: tail)  in
 
             (* Résultat en tête de pile *)
             (match res_stack with
               | res :: _ -> res :: tail
               | _ -> failwith "Le code du closure n'a pas produit de résultat")
-        | c :: _-> Printf.printf "Error App on :%s"(string_of_value c); failwith ""
-        | _ -> failwith ""
+        | _ -> failwith "App applied to non-pair closure value"
         )
-
-
     
     | Rplac -> (
       match s with
-      | v :: env :: tail ->
-          Printf.printf " (1) Rplac on :%s \n" (string_of_value env);
-          let replaced = rplac_subst NullValue env v in
-          Printf.printf " (2) Rplac on :%s \n" (string_of_value replaced);
-          Pair(replaced, env) :: tail
+      | Pair(p, v):: p1 :: tail ->
+          (* Printf.printf " (1) Rplac on : v = %s \n" (string_of_value v);
+
+          (match p1 with
+            |Closure (code, env) -> Printf.printf " (1) Rplac on  : p1 =%s \n" (string_of_value env)
+            |_ -> Printf.printf " (1) Rplac on :%s \n" (string_of_value p1));
+           *)
+          let replaced = rplac_subst v p1 p1 10 in
+          
+          (* (match replaced with
+            |Closure (code, env) -> Printf.printf " (1) Rplac on : res =%s \n code =" (string_of_value env);
+                                     (print_code_cam code);
+            |_ -> Printf.printf " (1) Rplac on :%s \n" (string_of_value replaced)); *)
+
+          Pair(p, replaced) :: tail
       | _ -> failwith "Rplac requires two values on the stack"
     )
 
-and rplac_subst dummy replacement = function
-  | NullValue -> 
-    if dummy = NullValue 
-      then (
-        replacement )
-      else 
-        NullValue
-  | Int _ | Bool _ as v -> 
-    v
-  | Pair (v1, v2) -> 
-    Pair (rplac_subst dummy replacement v1, rplac_subst dummy replacement v2)
-  | Closure (c, env) -> 
-    Closure (c, rplac_subst dummy replacement env)
+and rplac_subst occ v init n=
+  if v = occ then (if n=0 then init else rplac_subst occ init init (n-1)) 
+  else match v with
+    | Int _ | Bool _ | NullValue -> v
+    | Pair (v1, v2) -> Pair (rplac_subst occ v1 init n, rplac_subst occ v2 init n)
+    | Closure (code, clo_env) -> Closure (code, rplac_subst occ clo_env init n)
+
   
 
 and eval_coms (coms : coms) (stack : value list) : value list =

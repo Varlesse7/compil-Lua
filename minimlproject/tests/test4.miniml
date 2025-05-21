@@ -4,4 +4,4 @@ let rec fact = fun n ->
   else
     mult(n, fact(sub(n, 1)))
 in
-fact(5)
+fact(7)

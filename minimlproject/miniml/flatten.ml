@@ -76,7 +76,7 @@ let string_of_flat = function
 let generate_eclat_to_file (filename : string) (code : flat_com array) =
   let oc = open_out filename in
   let write_line s = output_string oc (s ^ "\n") in
-
+  write_line "use \"types.ecl\";;\n";
   write_line "let code = create<1024>();;\n";
   write_line "let load_code() =";
   Array.iteri (fun i instr ->
